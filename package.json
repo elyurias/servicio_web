@@ -1,0 +1,19 @@
+{
+  "name": "web_service",
+  "version": "0.1.0",
+  "description": "web_service",
+  "main": "index.js",
+  "author": {
+    "name": "Irving Moncada Lucio"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "jsonwebtoken": "^8.3.0",
+    "mangosta": "^1.0.1",
+    "mongoose": "^5.1.5",
+    "mongoose-unique-validator": "^2.0.1",
+    "node-rsa": "^1.0.0"
+  }
+}
