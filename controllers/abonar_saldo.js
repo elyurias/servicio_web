@@ -17,6 +17,7 @@ var mongoose = require('mongoose');
 
 ruta.post('/', [VerifyToken, TengoCredito], (req, res) => {
     if (typeof req.body.saldo_suma == 'undefined') return res.status(200).json({ status: false, message: "Estructura incorrecta" });
+    var enc = new encdec();
     User.findById(req.userId, (err, user) => {
         if (err) return res.status(200).json({ status: false, message: "Error al acceder a la informacion del usuario" });
         if (!user) return res.status(200).json({ status: false, message: "El usuario no existe" });
