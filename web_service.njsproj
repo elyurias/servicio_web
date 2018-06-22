@@ -35,6 +35,9 @@
     <Compile Include="config.js">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="controllers\abonar_saldo.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="controllers\actividad.js">
       <SubType>Code</SubType>
     </Compile>

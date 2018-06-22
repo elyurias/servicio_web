@@ -15,6 +15,8 @@ var moneda = require('../middleware/middleware_monedero');
 var Monedero = require('../models/monedero');
 var encrypt = require('../middleware/mod_secure');
 var TengoCredito = require('../middleware/credito');
+var ActividadesCompra = require('../models/compra_actividades');
+var Actividades = require('../models/actividad');
 
 ruta.post('/login', function (req, res) {
     if (typeof req.body.email == 'undefined' || typeof req.body.password == 'undefined') return res.status(200).json({ status: false, message: "No tiene los parametros necesarios" });
@@ -97,6 +99,18 @@ ruta.get('/micredito', [VerifyToken, TengoCredito], (req, res) => {
         status: true,
         id_usuario: req.userId,
         cantidad_moneda: req.userValor
+    });
+});
+ruta.get('/actividades_compradas', [VerifyToken], (req, res) => {
+    ActividadesCompra.find({ id_usuario: req.userId }).populate('id_actividad').exec(
+        (err, actividadCompra) => {
+            if (err) return res.status(200).json({ status: false, message: "Error al obtener los daotos" });
+            if (!actividadCompra) return res.status(200).json({ status: false, message: "No se encontraron registros" });
+            let actividades_compradas = [];
+            actividadCompra.forEach((act) => {
+                actividades_compradas.push(act.id_actividad);
+            });
+            return res.status(200).json({ status: true, cuerpo: actividades_compradas });
     });
 });
 
