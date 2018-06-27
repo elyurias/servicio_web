@@ -17,25 +17,27 @@ var encrypt = require('../middleware/mod_secure');
 var TengoCredito = require('../middleware/credito');
 var ActividadesCompra = require('../models/compra_actividades');
 var Actividades = require('../models/actividad');
+var Transaccion = require('../models/transaccion');
+
 
 ruta.post('/login', function (req, res) {
     if (typeof req.body.email == 'undefined' || typeof req.body.password == 'undefined') return res.status(200).json({ status: false, message: "No tiene los parametros necesarios" });
     User.findOne({ email: req.body.email }, function (err, user) {
-        if (err) return res.status(200).send({ auth:false, message: 'Error del Servidor' });
-        if (!user) return res.status(200).send({ auth: false, message: 'No se encuentra registrado' });
+        if (err) return res.status(200).send({ status: false, auth:false, message: 'Error del Servidor' });
+        if (!user) return res.status(200).send({ status: false, auth: false, message: 'No se encuentra registrado' });
         if (user.tipo == 'Google') {
             var token = jwt.sign({ id: user._id }, config.secret, {
                 expiresIn: 604800
             });
-            return res.status(200).send({ auth: true, token: token, message: "Bienvenido", tipo: user.nivelDeAcceso });
+            return res.status(200).send({ status: true, auth: true, token: token, message: "Bienvenido", tipo: user.nivelDeAcceso });
         }
         var passwordEsValido = bcrypt.compareSync(req.body.password, user.password);
         //var passwordEsValido = req.body.password == user.password ? true : false;
-        if (!passwordEsValido) return res.status(200).send({ auth: false, token: null });
+        if (!passwordEsValido) return res.status(200).send({ status: false, message:"Verifica tu usuario y/o contraseña", auth: false, token: null });
         var token = jwt.sign({ id: user._id }, config.secret, {
             expiresIn: 604800
         });
-        return res.status(200).send({ auth: true, token: token, message: "Bienvenido", tipo: user.nivelDeAcceso });
+        return res.status(200).send({ status: true,  auth: true, token: token, message: "Bienvenido", tipo: user.nivelDeAcceso });
     });
 });
 
@@ -49,8 +51,6 @@ ruta.post('/registrar', function (req, res) {
         typeof req.body.tipo_sesion == 'undefined' ||
         typeof req.body.na == 'undefined') return res.status(200).json({ status: false, message: "No tiene los parametros necesarios" });
     var hashedPassword = bcrypt.hashSync(req.body.password, 8);
-    //Servidor en modo de pruebas.
-    // --return res.status(200).json(req.body);
     var enc = new encrypt()
     Monedero.create({
         status: true,
@@ -111,6 +111,12 @@ ruta.get('/actividades_compradas', [VerifyToken], (req, res) => {
                 actividades_compradas.push(act.id_actividad);
             });
             return res.status(200).json({ status: true, cuerpo: actividades_compradas });
+    });
+});
+ruta.get('/mis_transacciones', [VerifyToken], (req, res) => {
+    Transaccion.find({ envio: req.userId, estado: true },[], { sort: { fecha_de_registro:-1}}, (err, transaccion) => {
+        if (err || !transaccion) return res.status(200).json({ status: false, message: "No se encontraron resultados" });
+        return res.status(200).json({ status: true, cuerpo: transaccion, message: "Obteniendo resultados" });
     });
 });
 

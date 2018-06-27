@@ -31,7 +31,7 @@ ruta.get('/:id', (req, res) => {
 ruta.post('/', [VerifyToken, TengoCredito], (req, res) => {
     console.log(req.body.cantidad); 
     console.log("Lo que quieres transferir " + parseInt(req.body.cantidad) + ", tuSaldo " + parseInt(req.userValor));
-    if (parseInt(req.body.cantidad) > parseInt(req.userValor))
+    if (parseFloat(req.body.cantidad) > parseFloat(req.userValor))
         return res.status(200).json({ status: false, message: "No cuentas con el credito suficiente" });
     Transaccion.create(
         {
@@ -43,17 +43,35 @@ ruta.post('/', [VerifyToken, TengoCredito], (req, res) => {
         (err, transaccion) => {
             if (err) return res.status(200).json({ status: false, message: "No se pudo generar la transaccion A/B" });
             if (!transaccion) return res.status(200).json({ status: false, message: "No se genero la transaccion B/B" });
-            return res.status(200).json({ status: true, cuerpo: transaccion });
+            var enc = new encdec();
+            var moneda_encriptada = enc.encrypt(config.Moneda_Secret_codificate, parseFloat(req.body.cantidad).toString());
+            console.log("La moneda encriptada es: " + moneda_encriptada)
+            console.log("La moneda original   es: " + enc.decrypt(config.Moneda_Secret_codificate, moneda_encriptada))
+            return res.status(200).json({ status: true, cuerpo: transaccion, moneda_encriptada: moneda_encriptada });
         }
     );
 });
-ruta.put('/:id', [VerifyToken, TengoCredito], (req, res) => {
+ruta.post('/finalizar/:id', [VerifyToken, TengoCredito], (req, res) => {
     /* Cosas que existen en el sistema
         req.userId
         req.userValor
         req.monedaId */
+    console.log("---------Iniciando_Transaccion---------------------------------------------");
     var enc = new encdec();
-    Transaccion.findByIdAndUpdate(req.params.id, {
+    var identificador = (req.params.id).toString().split("__::__")
+    console.log(identificador)
+    if (typeof identificador != 'object') {
+        return res.status(200).json({ status: false, message: "Error al acceder al recurso" })
+    }
+    var moneda = 0.0
+    try {
+        moneda = enc.decrypt(config.Moneda_Secret_codificate, identificador[1]);
+        console.log("Moneda asociada a la transaccion: "+moneda)
+    } catch (e) {
+        return res.status(200).json({ status:false, message:"Error al obtener la moneda"})
+    }
+    console.log(identificador[0])
+    Transaccion.findByIdAndUpdate(identificador[0], {
         estado: true,
         recibio: req.userId
     },{ "new": true }).where('estado', false).exec((err, transaccion) => {
@@ -97,8 +115,9 @@ ruta.put('/:id', [VerifyToken, TengoCredito], (req, res) => {
                     if (err) return res.status(200).json({ status: false, message: "Error al asignar el usuario al sistema" });
                 });
             });
-        });
-        return res.status(200).json({ status: true, cuerpo: transaccion });
+            });
+        console.log("La transaccion ha sido finalizada")
+        return res.status(200).json({ status: true, message:"Transaccion correcta", cuerpo: transaccion });
     });
 });
 module.exports = ruta;
