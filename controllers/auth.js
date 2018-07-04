@@ -19,7 +19,6 @@ var ActividadesCompra = require('../models/compra_actividades');
 var Actividades = require('../models/actividad');
 var Transaccion = require('../models/transaccion');
 
-
 ruta.post('/login', function (req, res) {
     if (typeof req.body.email == 'undefined' || typeof req.body.password == 'undefined') return res.status(200).json({ status: false, message: "No tiene los parametros necesarios" });
     User.findOne({ email: req.body.email }, function (err, user) {
@@ -63,8 +62,7 @@ ruta.post('/registrar', function (req, res) {
             {
                 email: (req.body.email).toLowerCase(),
                 password: hashedPassword,
-                //password: req.body.password,
-                moneda: req.monedaId,//Codificar moneda en esta area
+                moneda: req.monedaId,
                 tipo: req.body.tipo_sesion,
                 nivelDeAcceso: req.body.na,
                 status: 1
@@ -101,7 +99,7 @@ ruta.get('/micredito', [VerifyToken, TengoCredito], (req, res) => {
         cantidad_moneda: req.userValor
     });
 });
-ruta.get('/actividades_compradas', [VerifyToken], (req, res) => {
+/*ruta.get('/actividades_compradas', [VerifyToken], (req, res) => {
     ActividadesCompra.find({ id_usuario: req.userId }).populate('id_actividad').exec(
         (err, actividadCompra) => {
             if (err) return res.status(200).json({ status: false, message: "Error al obtener los daotos" });
@@ -112,11 +110,11 @@ ruta.get('/actividades_compradas', [VerifyToken], (req, res) => {
             });
             return res.status(200).json({ status: true, cuerpo: actividades_compradas });
     });
-});
+});*/
 ruta.get('/mis_transacciones', [VerifyToken], (req, res) => {
-    Transaccion.find({ envio: req.userId, estado: true },[], { sort: { fecha_de_registro:-1}}, (err, transaccion) => {
+    Transaccion.find({ estado: true , $or: [{ envio: req.userId }, { recibio: req.userId}]},[], { sort: { fecha_de_registro:-1}}, (err, transaccion) => {
         if (err || !transaccion) return res.status(200).json({ status: false, message: "No se encontraron resultados" });
-        return res.status(200).json({ status: true, cuerpo: transaccion, message: "Obteniendo resultados" });
+        return res.status(200).json({ id_usuario: req.userId, status: true, cuerpo: transaccion, message: "Obteniendo resultados" });
     });
 });
 

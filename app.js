@@ -1,6 +1,8 @@
 ﻿var express = require('express');
 var app = express();
+var cors = require('cors')
 var db = require('./models/db');
+
 global.__root = __dirname + '/';
 
 // RESTful - MEAN Stack
@@ -8,7 +10,7 @@ global.__root = __dirname + '/';
        //Express   -> RESTful
          //AngularJS -> VISTA -> [Materializecss, Bootstrap] //Me estoy tardando con esta cosa... jaja
        //NodeJS    -> Servidor -> [Express]
-
+app.use(cors())
 app.get('/api', function (req, res) {
     var d = new Date()
     return res.status(200).json({
@@ -19,7 +21,6 @@ app.get('/api', function (req, res) {
         codigo_fuente: "JavaScript"
     });
 });
-
 var UserController = require('./controllers/user');
 app.use('/api/users', UserController);
 
